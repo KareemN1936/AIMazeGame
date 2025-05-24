@@ -56,13 +56,6 @@ Gameplay performance is automatically saved to:
 
 These files are created/updated on each game session.
 
-## 🖼️ Preview
-
-*Optional: Add a GIF or screenshot here*
-
-```
-![Game Preview](demo.gif)
-```
 
 ## 📄 License
 
