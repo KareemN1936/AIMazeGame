@@ -1,0 +1,5 @@
+__pycache__/
+*.py[cod]
+.venv/
+maze_performance_data.csv
+maze_move_details.csv

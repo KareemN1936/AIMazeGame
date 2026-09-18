@@ -2,8 +2,9 @@ import turtle
 import random
 import time
 import heapq
-import pandas as pd
 import datetime
+import csv
+from pathlib import Path
 
 # Game settings
 DIFFICULTY = {
@@ -58,11 +59,14 @@ message_turtle.penup()
 message_turtle.speed(0)
 
 # Ask player for name and difficulty
-player_name = screen.textinput("Player Name", "Enter your name:")
+player_name = (screen.textinput("Player Name", "Enter your name:") or "Player").strip()
 if not player_name:
     player_name = "Player"
 
-difficulty = screen.textinput("Difficulty", "Choose difficulty (easy, medium, hard):").lower()
+difficulty = (screen.textinput(
+    "Difficulty",
+    "Choose difficulty (easy, medium, hard):"
+) or "medium").strip().lower()
 if difficulty not in DIFFICULTY:
     difficulty = "medium"
 
@@ -88,6 +92,7 @@ move_timestamps = []
 moves_on_path = []
 reaction_times = []
 session_id = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+DATA_DIRECTORY = Path(__file__).resolve().parent
 
 
 def generate_maze():
@@ -455,59 +460,50 @@ def calculate_solution_path():
 
 # Save performance data to CSV
 def save_performance_data(won, completion_time, path_accuracy, avg_reaction_time):
-    # Create a dictionary with all performance metrics
     performance_data = {
-        'session_id': [session_id],
-        'player_name': [player_name],
-        'difficulty': [difficulty],
-        'completed': [won],
-        'completion_time': [completion_time],
-        'total_moves': [move_count],
-        'correct_moves': [correct_moves],
-        'path_accuracy': [path_accuracy],
-        'avg_reaction_time': [avg_reaction_time],
-        'hints_used': [hint_uses],
-        'solution_views': [solution_views],
-        'optimal_path_length': [len(solution_path) if solution_path else 0],
-        'timestamp': [datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
+        'session_id': session_id,
+        'player_name': player_name,
+        'difficulty': difficulty,
+        'completed': won,
+        'completion_time': completion_time,
+        'total_moves': move_count,
+        'correct_moves': correct_moves,
+        'path_accuracy': path_accuracy,
+        'avg_reaction_time': avg_reaction_time,
+        'hints_used': hint_uses,
+        'solution_views': solution_views,
+        'optimal_path_length': len(solution_path) if solution_path else 0,
+        'timestamp': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
 
-    # Create DataFrame
-    df = pd.DataFrame(performance_data)
-
-    try:
-        # Try to read existing data file
-        existing_df = pd.read_csv('maze_performance_data.csv')
-        # Append new data
-        updated_df = pd.concat([existing_df, df], ignore_index=True)
-        updated_df.to_csv('maze_performance_data.csv', index=False)
-    except:
-        # If file doesn't exist, create new one
-        df.to_csv('maze_performance_data.csv', index=False)
+    append_csv(DATA_DIRECTORY / 'maze_performance_data.csv', [performance_data])
 
     print(f"Performance data saved for {player_name}")
 
     # Also save detailed move data for analysis
-    move_details = {
-        'session_id': [session_id] * len(moves_on_path),
-        'move_number': list(range(1, len(moves_on_path) + 1)),
-        'on_optimal_path': moves_on_path,
-        'timestamp': move_timestamps[:len(moves_on_path)],
-        'reaction_time': reaction_times + [0]  # Add padding for first move
-    }
+    move_details = [
+        {
+            'session_id': session_id,
+            'move_number': index + 1,
+            'on_optimal_path': on_path,
+            'timestamp': move_timestamps[index],
+            'reaction_time': 0 if index == 0 else reaction_times[index - 1]
+        }
+        for index, on_path in enumerate(moves_on_path)
+    ]
+    append_csv(DATA_DIRECTORY / 'maze_move_details.csv', move_details)
 
-    # Create DataFrame for move details
-    moves_df = pd.DataFrame(move_details)
 
-    try:
-        # Try to read existing move data file
-        existing_moves_df = pd.read_csv('maze_move_details.csv')
-        # Append new data
-        updated_moves_df = pd.concat([existing_moves_df, moves_df], ignore_index=True)
-        updated_moves_df.to_csv('maze_move_details.csv', index=False)
-    except:
-        # If file doesn't exist, create new one
-        moves_df.to_csv('maze_move_details.csv', index=False)
+def append_csv(path, rows):
+    if not rows:
+        return
+
+    write_header = not path.exists() or path.stat().st_size == 0
+    with path.open('a', newline='', encoding='utf-8') as output_file:
+        writer = csv.DictWriter(output_file, fieldnames=rows[0].keys())
+        if write_header:
+            writer.writeheader()
+        writer.writerows(rows)
 
 
 # MAIN PROGRAM STARTS HERE
