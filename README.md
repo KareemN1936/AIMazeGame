@@ -17,28 +17,26 @@ An interactive, AI-assisted maze game built in Python using Turtle Graphics and 
 
 ## 📦 Requirements
 
-- Python 3.x
+- Python 3.11 or newer with Tk support
 - Standard libraries:
   - `turtle`
   - `random`
   - `heapq`
+  - `csv`
   - `datetime`
   - `time`
-- External libraries:
-  - `pandas`
 
-Install pandas (if not already):
-```bash
-pip install pandas
-```
+No third-party packages, API keys, or environment variables are required.
+This is a desktop application and needs a graphical display; it is not a
+browser-hosted web app.
 
 ## 🚀 How to Run
 
 Clone this repository and run the main script:
 
 ```bash
-git clone https://github.com/your-username/ai-maze-game.git
-cd ai-maze-game
+git clone https://github.com/KareemN1936/AIMazeGame.git
+cd AIMazeGame
 python Main.py
 ```
 
